@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Tests / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Per-run artifacts (huge — never commit)
+runs/
+
+# Demo data: the 6.6 GB Xenium AnnData stays out of the repo.
+# Users download or symlink it themselves (see INSTALL.md).
+scVI_adata_annotated.h5ad
+
+# Logs
+*.log
+logs/
+
+# Editor / OS detritus
+*.bak
+*.tmp
+
+# Claude Code settings — user-local, not part of the public repo.
+.claude/
+
+# Note: uv.lock IS committed (lockfile pins exact deps for reproducibility).
