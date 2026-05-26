@@ -1,0 +1,47 @@
+# Niche construction for UNSUPERVISED niche analysis / clustering.
+# Keeps ALL niches so every cell gets a niche representation
+# (overlap_filter_enabled: false). For supervised classification, use
+# configs/niches_demo.yaml instead.
+
+run_name: niches_unsupervised
+run_dir: runs
+seed: 0
+device: auto
+
+pipeline:
+  name: clustering
+
+data:
+  path: /Users/henrikheiland/Desktop/Coding/EcoFoundation/scVI_adata_annotated.h5ad
+  sample_id_col: samples
+  patient_id_col: patient
+  condition_col: sonicated
+  celltype_col: celltype_level_1
+  spatial_key: spatial
+  counts_layer: counts
+  normalized_layer: X_exp
+  embedding_key: X_scVI
+
+qc:
+  enabled: false
+normalization:
+  enabled: false
+hvg:
+  enabled: false
+leiden:
+  enabled: false
+markers:
+  enabled: false
+
+niches:
+  strategy: knn
+  knn_k: 50              # niche size = 51 cells
+  min_cells_per_niche: 10
+  # KEY DIFFERENCE FROM niches_demo.yaml:
+  overlap_filter_enabled: false       # keep ALL niches — one per cell
+
+report:
+  enabled: true
+  title: EcoFoundation — Niches Demo (Unsupervised mode, all niches)
+  plotly_inline: true
+  spatial_max_points: 30000

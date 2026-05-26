@@ -1,0 +1,48 @@
+# Niche construction demo (Step 2).
+# Builds Delaunay-3hop niches on the full Xenium dataset and writes a report.
+
+run_name: niches_demo
+run_dir: runs
+seed: 0
+device: auto
+
+pipeline:
+  name: clustering  # placeholder — niche construction is its own demo
+
+data:
+  path: /Users/henrikheiland/Desktop/Coding/EcoFoundation/scVI_adata_annotated.h5ad
+  sample_id_col: samples
+  patient_id_col: patient
+  condition_col: sonicated
+  celltype_col: celltype_level_1
+  spatial_key: spatial
+  counts_layer: counts
+  normalized_layer: X_exp
+  embedding_key: X_scVI
+
+# Data is already preprocessed — skip preprocessing in the demo.
+qc:
+  enabled: false
+normalization:
+  enabled: false
+hvg:
+  enabled: false
+leiden:
+  enabled: false
+markers:
+  enabled: false
+
+niches:
+  strategy: knn
+  knn_k: 50              # niche size = 51 cells (50 neighbors + center)
+  max_edge_length: null   # set in µm to gate against tissue gaps if desired
+  min_cells_per_niche: 10
+  max_cells_per_niche: null
+  overlap_filter_enabled: true   # supervised mode — see niches_unsupervised.yaml for the alternative
+  max_overlap_fraction: 0.2
+
+report:
+  enabled: true
+  title: EcoFoundation — Niches Demo (Step 2)
+  plotly_inline: true
+  spatial_max_points: 30000

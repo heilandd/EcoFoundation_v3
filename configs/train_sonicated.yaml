@@ -1,0 +1,93 @@
+# Supervised GNN training demo (Step 4).
+# Binary classification: predict the 'sonicated' status from a niche graph.
+
+run_name: train_sonicated
+run_dir: runs
+seed: 0
+device: auto
+
+pipeline:
+  name: niche_classification
+
+data:
+  path: /Users/henrikheiland/Desktop/Coding/EcoFoundation/scVI_adata_annotated.h5ad
+  sample_id_col: samples
+  patient_id_col: patient
+  condition_col: sonicated
+  celltype_col: celltype_level_1
+  spatial_key: spatial
+  counts_layer: counts
+  normalized_layer: X_exp
+  embedding_key: X_scVI
+
+qc: { enabled: false }
+normalization: { enabled: false }
+hvg: { enabled: false }
+leiden: { enabled: false }
+markers: { enabled: false }
+
+niches:
+  strategy: knn
+  knn_k: 50
+  min_cells_per_niche: 10
+  overlap_filter_enabled: true     # supervised mode → cap overlap
+  max_overlap_fraction: 0.2
+
+graph:
+  node_feature_source: expression
+  node_expression_layer: X_exp
+  gene_subset: hvg
+  n_hvg: 500
+  edge_topology: delaunay_intra_niche
+  edge_feature_distance: true
+  edge_feature_normalize_distance: true
+  lr_scoring:
+    enabled: true
+    resource: omnipath_consensus
+    aggregation: tier1_score
+
+model:
+  architecture: gine        # default; switch to 'gat_edge' for the alternative
+  hidden_dim: 64
+  n_layers: 3
+  dropout: 0.1
+  pooling: attention
+  batch_norm: true
+
+training:
+  targets:
+    - name: sonicated
+      obs_column: sonicated
+      type: categorical
+      loss: cross_entropy
+      weight: 1.0
+      label_aggregation: ego
+  batch_size: 64
+  epochs: 30
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-4
+  optimizer: adamw
+  early_stopping_patience: 8
+  grad_clip: 1.0
+  cv_strategy: auto          # 5 patients → patient_kfold; else subgraph_split
+  min_patients_for_kfold: 5
+  n_folds: 5
+  train_test_ratio: 0.7
+  stratify_categorical: true
+  num_workers: 0
+  adversarial:
+    enabled: true
+    # null → uses data.patient_id_col → within each fold's train set the
+    # encoder is pushed AWAY from features that distinguish the training
+    # patients, improving generalisation to the held-out patient.
+    batch_col: null
+    lambda_max: 1.0
+    warmup_epochs: 4
+    hidden_dim: 64
+    dropout: 0.1
+
+report:
+  enabled: true
+  title: EcoFoundation — Supervised GNN (sonicated)
+  plotly_inline: true
+  spatial_max_points: 30000

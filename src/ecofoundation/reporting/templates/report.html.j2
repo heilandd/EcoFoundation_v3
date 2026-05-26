@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ title }} — {{ run_name }}</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --fg: #1f2937;
+    --muted: #6b7280;
+    --accent: #2563eb;
+    --border: #e5e7eb;
+    --card: #ffffff;
+    --code-bg: #f3f4f6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: Helvetica, "Helvetica Neue", Arial, sans-serif;
+    margin: 0; padding: 0;
+    color: var(--fg);
+    background: var(--bg);
+    line-height: 1.45;
+    font-size: 13px;
+  }
+  header {
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 20px 32px;
+  }
+  header h1 { margin: 0 0 4px; font-size: 20px; font-weight: 600; }
+  header .meta { color: var(--muted); font-size: 12px; }
+  nav.toc {
+    position: sticky; top: 0;
+    background: var(--card);
+    border-bottom: 1px solid var(--border);
+    padding: 8px 32px;
+    font-size: 12px;
+    overflow-x: auto;
+    white-space: nowrap;
+    z-index: 100;
+  }
+  nav.toc a {
+    color: var(--accent); text-decoration: none;
+    margin-right: 14px;
+  }
+  nav.toc a:hover { text-decoration: underline; }
+  main { padding: 20px 32px; max-width: 1400px; margin: 0 auto; }
+  section.report-section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+  }
+  section.report-section h2 {
+    margin: 0 0 6px;
+    font-size: 15px;
+    font-weight: 600;
+  }
+  section.report-section .description {
+    color: var(--muted);
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+  section.report-section .params {
+    background: var(--code-bg);
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-family: "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 11px;
+    color: var(--fg);
+    margin-bottom: 10px;
+    white-space: pre-wrap;
+  }
+  details {
+    margin-top: 10px;
+    border-top: 1px dashed var(--border);
+    padding-top: 6px;
+  }
+  details summary {
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  table.report-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 12px;
+    margin-top: 6px;
+  }
+  table.report-table th, table.report-table td {
+    border: 1px solid var(--border);
+    padding: 4px 8px;
+    text-align: left;
+  }
+  table.report-table thead {
+    background: var(--code-bg);
+  }
+  dl.overview-grid {
+    display: grid;
+    grid-template-columns: max-content 1fr;
+    gap: 4px 14px;
+    margin: 0;
+  }
+  dl.overview-grid dt {
+    font-weight: 600;
+    color: var(--muted);
+  }
+  dl.overview-grid dd {
+    margin: 0;
+  }
+  pre.config-dump {
+    background: var(--code-bg);
+    padding: 10px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-size: 11px;
+  }
+  .plot-wrap svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+  }
+  .artifact-link {
+    color: var(--muted);
+    font-size: 11px;
+    margin: 4px 0 0;
+  }
+  .note {
+    color: var(--muted);
+    font-size: 11px;
+    margin-top: 4px;
+  }
+  footer {
+    color: var(--muted);
+    font-size: 11px;
+    text-align: center;
+    padding: 18px;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>{{ title }}</h1>
+  <div class="meta">
+    Run: <strong>{{ run_name }}</strong> · Generated {{ created_at }}
+    {% if pdf_dir_relative %} · PDF artefacts in <code>{{ pdf_dir_relative }}/</code>{% endif %}
+  </div>
+</header>
+
+<nav class="toc">
+{% for sec in sections %}
+  <a href="#sec-{{ loop.index }}">{{ sec.title }}</a>
+{% endfor %}
+  <a href="#run-metadata">Run metadata</a>
+</nav>
+
+<main>
+{% for sec in sections %}
+  <section class="report-section" id="sec-{{ loop.index }}">
+    <h2>{{ sec.title }}</h2>
+    {% if sec.description %}
+      <div class="description">{{ sec.description }}</div>
+    {% endif %}
+    {% if sec.parameters %}
+      <div class="params">{{ sec.parameters | tojson(indent=2) }}</div>
+    {% endif %}
+    {{ sec.html }}
+  </section>
+{% endfor %}
+
+<section class="report-section" id="run-metadata">
+  <h2>Run metadata</h2>
+  <details open>
+    <summary>Versions</summary>
+    <pre class="config-dump">{{ versions | tojson(indent=2) }}</pre>
+  </details>
+  <details>
+    <summary>Full config</summary>
+    <pre class="config-dump">{{ config_dump | tojson(indent=2) }}</pre>
+  </details>
+</section>
+</main>
+
+<footer>
+  EcoFoundation report · {{ created_at }}
+</footer>
+</body>
+</html>

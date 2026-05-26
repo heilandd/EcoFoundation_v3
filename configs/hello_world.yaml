@@ -1,0 +1,48 @@
+# Hello-World config for EcoFoundation.
+# Validates the Step-0 / Step-1 plumbing against the user's Xenium dataset.
+
+run_name: hello_world
+run_dir: runs
+seed: 0
+device: auto
+
+pipeline:
+  name: clustering
+
+data:
+  path: /Users/henrikheiland/Desktop/Coding/EcoFoundation/scVI_adata_annotated.h5ad
+  sample_id_col: samples
+  patient_id_col: patient
+  condition_col: sonicated
+  celltype_col: celltype_level_1
+  spatial_key: spatial
+  counts_layer: counts
+  normalized_layer: X_exp
+  embedding_key: X_scVI
+
+# Data is already preprocessed (scVI). Skip redundant steps; we'll show QC
+# stats in the report but not re-filter.
+qc:
+  enabled: false
+normalization:
+  enabled: false
+hvg:
+  enabled: false
+
+leiden:
+  enabled: true
+  resolution: 0.8
+  n_neighbors: 15
+  use_rep: X_scVI
+  random_state: 0
+
+markers:
+  enabled: true
+  n_top: 10
+  method: wilcoxon
+
+report:
+  enabled: true
+  title: EcoFoundation — Hello World
+  plotly_inline: true
+  spatial_max_points: 30000

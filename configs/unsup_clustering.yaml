@@ -1,0 +1,89 @@
+# Unsupervised spatial-niche clustering (Step 6 + 6.5).
+# Custom GAE (from scratch in PyG) over per-cell niches; trains a
+# GINE-based encoder, pools to per-niche embeddings, runs Leiden, and
+# exports the result back to an AnnData (ecof_annotated.h5ad).
+# To switch to DGI: set unsup.model.architecture: dgi.
+
+run_name: unsup_clustering
+run_dir: runs
+seed: 0
+device: auto
+
+pipeline:
+  name: clustering   # niche_classification is for the supervised path
+
+data:
+  path: /Users/henrikheiland/Desktop/Coding/EcoFoundation/scVI_adata_annotated.h5ad
+  sample_id_col: samples
+  patient_id_col: patient
+  condition_col: sonicated
+  celltype_col: celltype_level_1
+  spatial_key: spatial
+  counts_layer: counts
+  normalized_layer: X_exp
+  embedding_key: X_scVI
+
+qc: { enabled: false }
+normalization: { enabled: false }
+hvg: { enabled: false }
+leiden: { enabled: false }
+markers: { enabled: false }
+
+niches:
+  strategy: knn
+  knn_k: 50
+  min_cells_per_niche: 10
+  # KEY: every cell needs its own niche for unsupervised analysis.
+  overlap_filter_enabled: false
+  # max_overlap_fraction is ignored when filter is disabled.
+
+graph:
+  node_feature_source: expression
+  node_expression_layer: X_exp
+  gene_subset: hvg
+  n_hvg: 500
+  edge_topology: delaunay_intra_niche
+  edge_feature_distance: true
+  edge_feature_normalize_distance: true
+  lr_scoring:
+    enabled: true
+    resource: omnipath_consensus
+    aggregation: tier1_score
+
+unsup:
+  model:
+    architecture: gae        # gae (default) | vgae | dgi
+    hidden_dim: 64
+    n_layers: 3
+    dropout: 0.1
+    pooling: mean
+    batch_norm: true
+  batch_size: 256
+  epochs: 20
+  learning_rate: 1.0e-3
+  weight_decay: 1.0e-5
+  grad_clip: 1.0
+  n_neg_samples_per_edge: 1
+  dgi_corruption: row_shuffle
+  leiden_resolution: 0.6
+  leiden_n_neighbors: 30
+  # Fraction-based subsampling (preferred). 0.3 → ~78k niches for the 259k Xenium dataset.
+  # Inference + embedding extraction still run on ALL niches.
+  subsample_fraction_for_training: 0.3
+  max_niches_for_training: null
+  adversarial:
+    enabled: true
+    # null → use data.patient_id_col → encoder learns patient-invariant niche features.
+    batch_col: null
+    lambda_max: 1.0
+    warmup_epochs: 5
+    hidden_dim: 64
+    dropout: 0.1
+  export_anndata: true
+  write_compressed_h5ad: true
+
+report:
+  enabled: true
+  title: EcoFoundation — Unsupervised Niche Clustering (Step 6 + adversarial debias)
+  plotly_inline: true
+  spatial_max_points: 30000
